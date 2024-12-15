@@ -23,24 +23,20 @@ def save_dxf(doc: Drawing, filename: str) -> None:
 
 
 class PointsGenerator(ABC):
-    # _doc: Drawing
-    # _msp: Modelspace 
-
-    def __init__(self):
-        # self._doc: Drawing = ezdxf.new('R2010')
-        # self._msp: Modelspace = self._doc.modelspace()
-        pass
+    _cx:float
+    _cy:float
+    _num_segments:int
+    def __init__(
+        self,
+        num_segments:int,
+        cx: float = 0,
+        cy: float = 0
+    ):
+        self._cx: float = cx
+        self._cy: float = cy
+        self._num_segments:int = num_segments
         
-    # @abstractmethod
-    # def generate(self) -> None:
-    #     pass
 
     @abstractmethod
     def points(self) -> Points:
         pass
-    # def _add_polyline(self, points:Points):
-    #     # self._msp.add_lwpolyline(numpy_to_vec2_list(points))
-    #     self._msp.add_lwpolyline(points)
-    
-    # def save(self, filename: str) -> None:
-    #     save_dxf(self._doc, filename)

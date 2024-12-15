@@ -1,9 +1,6 @@
 from PointsGenerator import *
 
 class GearGenerator(PointsGenerator):
-
-    cx: float
-    cy: float
     num_teeth: int
     module: float
     pressure_angle: float
@@ -17,15 +14,14 @@ class GearGenerator(PointsGenerator):
 
     def __init__(
         self,
-        cx: float,
-        cy: float,
         num_teeth: int,
         module: float,
-        pressure_angle: float = 20
+        num_segments: int = 100,
+        pressure_angle: float = 20,
+        cx: float = 0,
+        cy: float = 0
     ):
-        super().__init__()
-        self.cx: float = cx
-        self.cy: float = cy
+        super().__init__(num_segments, cx, cy)
         self.num_teeth: int = num_teeth
         self.module: float = module
         self.pressure_angle: float = pressure_angle
@@ -54,51 +50,56 @@ class GearGenerator(PointsGenerator):
     def __calculate_base_tooth_angle(self) -> float:
         return 2 * np.arcsin(np.tan(self.tooth_angle / 2) * np.cos(np.radians(self.pressure_angle)))
 
+    # def __generate_involute_curve(self, start_angle: float, end_condition: Callable[[float, float], bool], sign: int = 1) -> Points:
+    #     t_values = np.linspace(0, 10, int(self._num_segments / self.num_teeth))  # Adjust the range and number of points as needed
+    #     x = self.base_circle_radius * (np.cos(start_angle + t_values) + sign * t_values * np.sin(start_angle + t_values))
+    #     y = self.base_circle_radius * (np.sin(start_angle + t_values) - sign * t_values * np.cos(start_angle + t_values))
+    #     valid_indices = np.where(end_condition(x, y))[0]
+    #     return [np.float32((x[i], y[i])) for i in valid_indices]
     def __generate_involute_curve(self, start_angle: float, end_condition: Callable[[float, float], bool], sign: int = 1) -> Points:
-        t_values = np.linspace(0, 10, 1000)  # Adjust the range and number of points as needed
+        # Adjust the range of t_values based on the geometry of the involute curve
+        t_max = 10  # This value might need adjustment based on the specific gear parameters
+        t_values = np.linspace(0, t_max, int(self._num_segments / self.num_teeth))  # Adjust the range and number of points as needed
+        
         x = self.base_circle_radius * (np.cos(start_angle + t_values) + sign * t_values * np.sin(start_angle + t_values))
         y = self.base_circle_radius * (np.sin(start_angle + t_values) - sign * t_values * np.cos(start_angle + t_values))
+        
         valid_indices = np.where(end_condition(x, y))[0]
-        return [Vec2(x[i], y[i]) for i in valid_indices]
+        return [np.float32((x[i], y[i])) for i in valid_indices]
 
     def __generate_outer_circle_points(self, angle: float) -> Points:
         return [
-            Vec2(self.outer_circle_radius * np.cos(angle + self.base_tooth_angle / 2),
-                 self.outer_circle_radius * np.sin(angle + self.base_tooth_angle / 2)),
-            Vec2(self.outer_circle_radius * np.cos(angle + self.base_tooth_angle),
-                 self.outer_circle_radius * np.sin(angle + self.base_tooth_angle))
+            np.float32((self.outer_circle_radius * np.cos(angle + self.base_tooth_angle / 2),
+                 self.outer_circle_radius * np.sin(angle + self.base_tooth_angle / 2))),
+            np.float32((self.outer_circle_radius * np.cos(angle + self.base_tooth_angle),
+                 self.outer_circle_radius * np.sin(angle + self.base_tooth_angle)))
         ]
 
     def __generate_root_circle_points(self, angle: float) -> Points:
         return [
-            Vec2(self.root_circle_radius * np.cos(angle + self.base_tooth_angle + self.base_tooth_angle / 2),
-                 self.root_circle_radius * np.sin(angle + self.base_tooth_angle + self.base_tooth_angle / 2)),
-            Vec2(self.root_circle_radius * np.cos(angle + self.base_tooth_angle * 2),
-                 self.root_circle_radius * np.sin(angle + self.base_tooth_angle * 2))
+            np.float32((self.root_circle_radius * np.cos(angle + self.base_tooth_angle + self.base_tooth_angle / 2),
+                 self.root_circle_radius * np.sin(angle + self.base_tooth_angle + self.base_tooth_angle / 2))),
+            np.float32((self.root_circle_radius * np.cos(angle + self.base_tooth_angle * 2),
+                 self.root_circle_radius * np.sin(angle + self.base_tooth_angle * 2)))
         ]
 
     def __translate_and_rotate_points(self, points: Points, angle: float) -> Points:
-        return [Vec2(p.x + self.cx, p.y + self.cy).rotate(angle) for p in points]
+        return [((p[0] + self._cx, p[1] + self._cy).rotate(angle) for p in points)]
 
     def __generate_tooth_points(self, angle: float) -> Points:
         points:Points = []
-        # Add points for the involute curve
-        points.extend(self.__generate_involute_curve(angle, lambda x, y: np.sqrt(x**2 + y**2) < self.outer_circle_radius))
-        # Add points for the outer circle
-        points.extend(self.__generate_outer_circle_points(angle))
-        # Add points for the involute curve on the other side
-        points.extend(self.__generate_involute_curve(angle + self.base_tooth_angle, lambda x, y: np.sqrt(x**2 + y**2) > self.root_circle_radius, sign=-1))
-        # Add points for the root circle
-        points.extend(self.__generate_root_circle_points(angle))
-        # Add points for the involute curve back to the base circle
-        points.extend(self.__generate_involute_curve(angle + self.base_tooth_angle * 2, lambda x, y: np.sqrt(x**2 + y**2) > self.base_circle_radius))
-        # Translate and rotate points
-        points = self.__translate_and_rotate_points(points, angle)
+        # points += (self.__generate_involute_curve(angle, lambda x, y: np.sqrt(x**2 + y**2) < self.outer_circle_radius, sign = -1))
+        points += (self.__generate_involute_curve(angle, lambda x, y: np.sqrt(x**2 + y**2) < self.outer_circle_radius, sign = 1))
+        points += (self.__generate_outer_circle_points(angle))
+        # points += (self.__generate_involute_curve(angle + self.base_tooth_angle, lambda x, y: np.sqrt(x**2 + y**2) > self.root_circle_radius, sign=-1))
+        points += (self.__generate_root_circle_points(angle))
+        # points += (self.__generate_involute_curve(angle + self.base_tooth_angle * 2, lambda x, y: np.sqrt(x**2 + y**2) > self.base_circle_radius))
+        # points += self.__translate_and_rotate_points(points, angle)
         return points
 
-    def generate(self) -> None:
+    def points(self) -> Points:
         points:Points = []
         for i in range(self.num_teeth):
             angle = i * 2 * np.pi / self.num_teeth
-            points.extend(self.__generate_tooth_points(angle))
-        self._msp.add_polyline2d(points)
+            points += (self.__generate_tooth_points(angle))
+        return points
