@@ -1,4 +1,6 @@
-from PointsGenerator import *
+# from PointsGenerator import *
+# from PointsGenerator import *
+from gen.PointsGenerator import *
 
 class GearGenerator(PointsGenerator):
     num_teeth: int

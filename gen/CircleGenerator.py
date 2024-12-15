@@ -1,4 +1,4 @@
-from PointsGenerator import *
+from gen.PointsGenerator import *
 
 
 class CircleGenerator(PointsGenerator):

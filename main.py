@@ -5,7 +5,11 @@ import pandas as pd
 from utils.io import *
 from utils.plot import *
 from utils.geo import *
+from utils.generate import *
 
+from gen.GearGenerator import *
+from gen.CircleGenerator import *
+from gen.WheelGenerator import *
 
 #减速比
 reducation_ratio:int = 48
@@ -97,6 +101,16 @@ cr_array = np.append(cr_array, np.linspace(start = cr_array[0], stop = cr_array[
 # print(s_array[:20])
 # print(s_array[-20:])
 # print(rd_array[-20:])
-plot_cam(cr_array, rd_array)
+
+# plot_cam(cr_array, rd_array)
 # plot_path(x_array, y_array)
 # print(stop_radian, end_radian)
+x: np.float32 = cr_array * np.cos(rd_array)
+y: np.float32 = cr_array * np.sin(rd_array)
+points:Points = np.column_stack((x, y))
+
+def save_cam(points: Points) -> None:
+    generate_dxf_from_points(points, 'autogen/cam.dxf')    
+
+plot_points(points)
+save_cam(points)

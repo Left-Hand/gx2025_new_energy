@@ -11,16 +11,6 @@ sys.path.insert(0, parent_dir)
 from utils.common import *
 # from ..utils.plot import plot_points
 
-def save_dxf(doc: Drawing, filename: str) -> None:
-    try:
-        # Ensure the directory exists
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        doc.saveas(filename)
-    except FileNotFoundError as e:
-        print(f"File path error: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-
 
 class PointsGenerator(ABC):
     _cx:float

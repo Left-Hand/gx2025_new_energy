@@ -1,5 +1,12 @@
-from PointsGenerator import *
+import sys
+import os
+# 获取当前脚本所在目录的上一级目录
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+# 将上一级目录添加到 sys.path
+sys.path.insert(0, parent_dir)
 
+from gen.PointsGenerator import *
 
 class WheelGenerator(PointsGenerator):
     _radius:float
