@@ -1,5 +1,4 @@
-import matplotlib.pyplot as plt
-import numpy as np
+from utils.common import *
 
 def plot_path(x_points: np.float32, y_points: np.float32):
     """
@@ -11,6 +10,29 @@ def plot_path(x_points: np.float32, y_points: np.float32):
     """
     fontdict={"family": "KaiTi", "size": 15, "color": "b"}
 
+    plt.figure(figsize=(10, 6))
+    plt.plot(x_points, y_points, marker='o', linestyle='-')
+    plt.title('路径图', fontsize=13, fontdict = fontdict)
+    
+    plt.xlabel('X 坐标', fontsize=13, fontdict = fontdict)
+    plt.ylabel('Y 坐标', fontsize=13, fontdict = fontdict)
+    plt.grid(True)
+    plt.axis('equal')  # 保持 x 和 y 轴的比例相同
+    plt.show()
+
+def plot_points(points: Points) -> None:
+    """
+    绘制点集
+
+    参数:
+    x_points (np.float32): x 坐标数组
+    y_points (np.float32): y 坐标数组
+    """
+    fontdict={"family": "KaiTi", "size": 15, "color": "b"}
+
+    x_points:np.float32 = points[:, 0]
+    y_points:np.float32 = points[:, 1]
+    
     plt.figure(figsize=(10, 6))
     plt.plot(x_points, y_points, marker='o', linestyle='-')
     plt.title('路径图', fontsize=13, fontdict = fontdict)
