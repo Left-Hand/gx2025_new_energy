@@ -67,7 +67,9 @@ prime_circle_radius_mm:float = 55.65
 front_wheel_side_offset_mm:float = 24
 
 #hou轮到中线偏距
-back_wheel_side_offset_mm:float = 65.8 + 0.6
+# back_wheel_side_offset_mm:float = 65.8 + 0.6
+back_wheel_side_offset_mm:float = (66.2 + 66.98 + 67.42 + 67.30)/4 - 0.6
+
 
 #前轮到后轮偏距
 front_wheel_front_offset_mm:float = 130.65
@@ -82,7 +84,7 @@ end_barb_mm:float = 0.0
 
 extra_points_cnt:int = 1000
 
-route_path:str = 'data/points3.txt'
+route_path:str = 'data/points4.txt'
 output_path:str = 'autogen/cam.dxf'
 
 stick_radius:float = stick_radius_mm / 1000
@@ -161,9 +163,9 @@ contour_arr = np.append(contour_arr, np.linspace(start = contour_arr[0], stop = 
 def radian_and_contour_to_cam(radian: np.float32, contour: np.float32) -> Tuple[np.float32, np.float32]:
     return contour * np.cos(radian), contour * np.sin(radian)
 
-def save_cam(x_points: np.float32, y_points: np.float32) -> None:
-    cam_points = np.column_stack((x_points, y_points))
-    generate_dxf_from_points(cam_points, output_path)     
+def save_cam(x: np.float32, y: np.float32) -> None:
+
+    generate_dxf_from_points(x,y, output_path)     
 
 
 from shapely.geometry import Polygon
@@ -228,10 +230,6 @@ def filter_xy(x, y):
         
     #     return raw_cam_x, raw_cam_y
     
-cam_x, cam_y = shrink_points(raw_cam_x, raw_cam_y, stick_radius)
-cam_x, cam_y = cam_x[1:-IGNORE_BACK], cam_y[1:-IGNORE_BACK]
-cam_x = np.append(cam_x, cam_x[0])
-cam_y = np.append(cam_y, cam_y[0])
 
 
 def remap_xy(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -258,7 +256,46 @@ def remap_xy(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     
     return sorted_x, sorted_y
 
-cam_x, cam_y = remap_xy(cam_x, cam_y)
+
+from shapely.geometry import Polygon, MultiPolygon
+
+def prune_self_intersecting_contour2(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    # Create closed contour polygon
+    polygon = create_contour_polygon(x, y)
+    
+    # Repair self-intersecting polygon
+    # if polygon.is_self_intersecting or not polygon.is_valid:
+    if True:
+        # Use buffer(0) to fix topology
+        repaired = polygon.buffer(0)
+        
+        # Handle possible MultiPolygon result
+        if repaired.geom_type == 'MultiPolygon':
+            # Select largest area polygon
+            max_area = 0
+            selected_poly = None
+            for p in repaired.geoms:
+                if p.area > max_area:
+                    max_area = p.area
+                    selected_poly = p
+            repaired = selected_poly if selected_poly else repaired[0]
+        
+        # Extract coordinates from repaired polygon
+        if repaired and repaired.exterior:
+            coords = list(repaired.exterior.coords)
+            return np.array(coords)[:,0], np.array(coords)[:,1]
+    
+    # Return original coordinates if no repair needed
+    return x, y
+
+
+cam_x, cam_y = shrink_points(raw_cam_x, raw_cam_y, stick_radius)
+cam_x, cam_y = cam_x[1:-IGNORE_BACK], cam_y[1:-IGNORE_BACK]
+cam_x = np.append(cam_x, cam_x[0])
+cam_y = np.append(cam_y, cam_y[0])
+
+cam_x, cam_y = prune_self_intersecting_contour2(cam_x, cam_y)
+# cam_x, cam_y = remap_xy(cam_x, cam_y)
 # cam_x, cam_y = filter_xy(cam_x, cam_y)
 # cam_x, cam_y = shrink_points(raw_cam_x, raw_cam_y, 0.005)
 plot_points_of2(cam_x, cam_y, raw_cam_x, raw_cam_y)
