@@ -3,10 +3,10 @@
         "**/.git": true,
         "**/.svn": true,
         "**/.hg": true,
-        "**/CVS": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
-        "**/.VSCodeCounter": true
+        "**/.VSCodeCounter": true,
+        "**/CVS": true
     },
     "hide-files.files": []
 }
