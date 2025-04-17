@@ -84,7 +84,8 @@ end_barb_mm:float = 0.0
 
 extra_points_cnt:int = 1000
 
-route_path:str = 'data/points4.txt'
+route_path:str = 'data/points6.txt'
+# route_path:str = 'data/points_line.txt'
 output_path:str = 'autogen/cam.dxf'
 
 stick_radius:float = stick_radius_mm / 1000
@@ -107,7 +108,7 @@ route_x:np.float32 = np.float32(csv_data['x'].to_numpy()) / 1000
 route_y:np.float32 = np.float32(csv_data['y'].to_numpy()) / 1000
 path_roc:np.float32 = np.float32(csv_data['r'].to_numpy()) / 1000
 
-wheel_x, wheel_y = shrink_points(route_x, route_y, back_wheel_radius)
+wheel_x, wheel_y = shrink_points(route_x, route_y, back_wheel_side_offset)
 
 
 path_points:np.ndarray[np.float32] = np.column_stack((wheel_x, wheel_y))
@@ -135,15 +136,15 @@ def journey_to_radian(journey: np.float32):
     return journey / back_wheel_radius / reducation_ratio
 
 def roc_to_contour_radius(roc: np.float32):
+    # roc = np.ones(len(roc)) * 1000000
     h:float = front_wheel_front_offset
-    theta:np.float32 = np.arcsin(h / roc)
-    wave =  - (stick_shaft + np.sign(theta) * (cam_thickness / 2)) * np.tan(theta)
+    theta:np.float32 = np.arctan(h / (roc - front_wheel_front_offset))
+    wave =  - (stick_shaft + (np.sign(theta) * (cam_thickness / 2))) * np.tan(theta)
     return prime_circle_radius + wave
 
 
 radian_arr = journey_to_radian(s_array)
 contour_arr = roc_to_contour_radius(path_roc)
-
 
 stop_radian:float = radian_arr[-1]
 end_radian:float = np.pi * 2 - np.arctan(stick_radius / prime_circle_radius)
