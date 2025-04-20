@@ -55,10 +55,10 @@ reducation_ratio:int = 48
 stick_radius_mm:float = 1
 
 #凸轮厚度
-cam_thickness_mm:float = 1.2
+cam_thickness_mm:float = 3.0
 
 #推杆侧移
-stick_shaft_mm:float = 31.75
+stick_shaft_mm:float = 31.75 + (cam_thickness_mm/2-0.6)
 
 #基圆半径
 prime_circle_radius_mm:float = 55.65
@@ -84,9 +84,9 @@ end_barb_mm:float = 0.0
 
 extra_points_cnt:int = 1000
 
-route_path:str = 'data/points6.txt'
+route_path:str = 'data/points_shengsai3.txt'
 # route_path:str = 'data/points_line.txt'
-output_path:str = 'autogen/cam.dxf'
+output_path:str = 'autogen/cam_shengsai3.dxf'
 
 stick_radius:float = stick_radius_mm / 1000
 stick_shaft:float = stick_shaft_mm / 1000
